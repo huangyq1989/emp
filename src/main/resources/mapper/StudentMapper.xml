@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 映射 接口 StudentDao -->
+<mapper namespace="com.emp.studentManage.dao.StudentDao">
+
+
+    <!-- 根据条件模糊查询学员列表详情 -->
+    <select id="queryStudentByLike" resultType="com.emp.studentManage.entity.Student">
+        select id,realName,sex,idCard,phone,unit,department,job,email,updateTime from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        order by updateTime desc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询学员列表总条数 -->
+    <select id="countStudentByLike" resultType="int">
+        select count(*) from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+    </select>
+
+
+
+    <!-- 根据勾选查询学员列表详情 -->
+    <select id="queryStudentByCheck" parameterType="int[]" resultType="com.emp.studentManage.entity.Student">
+        select id,realName,sex,idCard,phone,unit,department,job,email,updateTime from tb_student_manage where status = 1 and id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        order by updateTime desc
+    </select>
+
+
+
+    <!-- 查询最大ID -->
+    <select id="queryAutoId" resultType="int">
+        SELECT AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'tb_student_manage'
+    </select>
+
+
+    <!-- 根据条件查询学生实例 -->
+    <select id="queryStudentByEquals" resultType="com.emp.studentManage.entity.Student">
+        select * from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName = #{student.realName,jdbcType=VARCHAR}
+            </if>
+            <if test="student.unit != null">
+                and unit = #{student.unit,jdbcType=VARCHAR}
+            </if>
+            <if test="student.phone != null">
+                and phone = #{student.phone,jdbcType=VARCHAR}
+            </if>
+            <if test="student.id != null and student.id != 0">
+                and id = ${student.id}
+            </if>
+        </if>
+        order by id asc
+    </select>
+
+
+    <!-- 新增学生实例 -->
+    <insert id="insertStudent" parameterType="com.emp.studentManage.entity.Student">
+        INSERT INTO tb_student_manage(realName,sex,idCard,phone,unit,department,job,email,remark)
+        values (#{realName},${sex},#{idCard},#{phone},#{unit},#{department},#{job},#{email},#{remark});
+        <!-- 需要返回自增主键:1.dao参数不能加注解 2.增加下面语句 -->
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID() as id
+        </selectKey>
+    </insert>
+
+
+    <!-- 修改学生实例 -->
+    <update id="updateStudent" parameterType="com.emp.studentManage.entity.Student">
+        update tb_student_manage set
+            realName = #{student.realName},
+            sex = ${student.sex},
+            idCard = #{student.idCard},
+            phone = #{student.phone},
+            unit = #{student.unit},
+            department = #{student.department},
+            job = #{student.job},
+            email = #{student.email},
+            remark = #{student.remark},
+            updateTime = current_timestamp
+        where status = 1 and id = #{student.id}
+    </update>
+
+
+    <!-- 修改学生状态为失效 -->
+    <update id="updateStudentsStatus" parameterType="int[]">
+        update tb_student_manage set status = 0,updateTime = current_timestamp where status = 1 and id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </update>
+
+
+    <!-- 删除学生实例(包括中间表) -->
+    <delete id="deleteStudents" parameterType="int[]">
+        delete from tb_cultivate_student where studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        delete from tb_examination_student where studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        delete from tb_estimate_student where studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        delete from tb_student_manage where id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+    </delete>
+
+
+
+
+    <!-- 根据学生ID查询培训情况 -->
+    <select id="querySC" resultType="com.emp.studentManage.entity.StudentCultivate">
+        select * from tv_StudentCultivate where 1=1
+        <if test="sc != null">
+            <if test="sc.studentId != null">
+                and studentId = #{sc.studentId,jdbcType=VARCHAR}
+            </if>
+        </if>
+        order by beginTime asc
+    </select>
+
+</mapper>

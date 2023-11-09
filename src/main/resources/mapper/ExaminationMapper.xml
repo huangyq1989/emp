@@ -1,0 +1,632 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 映射 接口 ExaminationDao -->
+<mapper namespace="com.emp.examinationManage.dao.ExaminationDao">
+
+
+    <!-- 根据条件模糊查询考试列表详情 -->
+    <select id="queryExaminationByLike" resultType="com.emp.examinationManage.entity.Examination">
+        select ex.id,ex.examinationName,ex.examinationTime,ex.examinationTimeLimit,ex.examinationDataCode,ex.makeupTime,ex.makeupNum,ex.isResit,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id) as examinationNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.isPassing is not null) as alreadyExaminationNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.isPassing = 1) as passingNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and (tes.isPassing != 1 or tes.isPassing is null)) as needMakeUpNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.stuMakeUpNum != 0) as alreadyMakeUpNum,
+        cu.id as cultivateId,cu.cultivateName,cu.cultivateType,cu.beginTime,cu.endTime,ex.passingScoreLine,ex.timingMode,tte.isPublish
+        from tb_examination_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id left join tb_testPaper_examination tte on tte.examinationId = ex.id
+        where ex.status = 1 and cu.status = 1
+        <if test="examination != null">
+            <if test="examination.cultivateName != null">
+                and cu.cultivateName like "%"#{examination.cultivateName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="examination.examinationTime != null">
+                and DATE_FORMAT(ex.examinationTime,'%Y-%m-%d') = #{examination.examinationTime,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.examinationDataCode != null">
+                and ex.examinationDataCode = ${examination.examinationDataCode}
+            </if>
+            <if test="examination.id != null and examination.id != 0">
+                and ex.id = ${examination.id}
+            </if>
+            <if test="examination.examinationName != null">
+                and ex.examinationName like "%"#{examination.examinationName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="examination.cultivateId != null and examination.cultivateId != 0">
+                and ex.cultivateId = ${examination.cultivateId}
+            </if>
+        </if>
+        order by FIELD(ex.examinationDataCode,1,0,2),cu.beginTime asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询考试列表总条数 -->
+    <select id="countExaminationByLike" resultType="int">
+        select count(1) from tb_examination_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1
+        <if test="examination != null">
+            <if test="examination.cultivateName != null">
+                and cu.cultivateName like "%"#{examination.cultivateName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="examination.examinationTime != null">
+                and DATE_FORMAT(ex.examinationTime,'%Y-%m-%d') = #{examination.examinationTime,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.examinationDataCode != null">
+                and ex.examinationDataCode = ${examination.examinationDataCode}
+            </if>
+            <if test="examination.id != null and examination.id != 0">
+                and ex.id = ${examination.id}
+            </if>
+            <if test="examination.examinationName != null">
+                and ex.examinationName like "%"#{examination.examinationName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="examination.cultivateId != null and examination.cultivateId != 0">
+                and ex.cultivateId = ${examination.cultivateId}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据勾选查询考试列表详情 -->
+    <select id="queryExaminationByCheck" parameterType="int[]" resultType="com.emp.examinationManage.entity.Examination">
+        select ex.id,ex.examinationName,ex.examinationTime,ex.examinationTimeLimit,ex.examinationDataCode,ex.makeupTime,ex.makeupNum,ex.isResit,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id) as examinationNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.isPassing is not null) as alreadyExaminationNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.isPassing = 1) as passingNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and (tes.isPassing != 1 or tes.isPassing is null)) as needMakeUpNum,
+        (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.stuMakeUpNum != 0) as alreadyMakeUpNum,
+        cu.id as cultivateId,cu.cultivateName,cu.cultivateType,cu.beginTime,cu.endTime,ex.passingScoreLine,ex.timingMode
+        from tb_examination_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1 and ex.id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        order by ex.id asc
+    </select>
+
+
+    <!-- 根据条件查询考试列表详情 -->
+    <select id="queryExaminationByEquals" resultType="com.emp.examinationManage.entity.Examination">
+        select ex.id,ex.examinationName,ex.examinationTime,ex.examinationEndTime,ex.examinationTimeLimit,ex.examinationDataCode,ex.makeupBeginTime,ex.makeupTime,ex.makeupNum,ex.isResit,ex.isDisorder,
+        (select count(1) from tb_examination_student where examinationId=ex.id) as examinationNum,
+        cu.id as cultivateId,cu.cultivateName,cu.cultivateType,cu.beginTime,cu.endTime,ex.passingScoreLine,ex.timingMode,ex.isAnswerAnalysis
+        from tb_examination_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1
+        <if test="examination != null">
+            <if test="examination.cultivateName != null">
+                and cu.cultivateName = #{examination.cultivateName,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.examinationTime != null">
+                and DATE_FORMAT(ex.examinationTime,'%Y-%m-%d') = #{examination.examinationTime,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.examinationDataCode != null">
+                and ex.examinationDataCode = ${examination.examinationDataCode}
+            </if>
+            <if test="examination.id != null and examination.id != 0">
+                and ex.id = ${examination.id}
+            </if>
+            <if test="examination.examinationName != null">
+                and ex.examinationName = #{examination.examinationName,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.cultivateId != null and examination.cultivateId != 0">
+                and ex.cultivateId = ${examination.cultivateId}
+            </if>
+        </if>
+        order by ex.id asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件统计考试列表总条数 -->
+    <select id="countExaminationByEquals" resultType="int">
+        select count(1) from tb_examination_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1
+        <if test="examination != null">
+            <if test="examination.cultivateName != null">
+                and cu.cultivateName = #{examination.cultivateName,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.examinationTime != null">
+                and DATE_FORMAT(ex.examinationTime,'%Y-%m-%d') = #{examination.examinationTime,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.examinationDataCode != null">
+                and ex.examinationDataCode = ${examination.examinationDataCode}
+            </if>
+            <if test="examination.id != null and examination.id != 0">
+                and ex.id = ${examination.id}
+            </if>
+            <if test="examination.examinationName != null">
+                and ex.examinationName = #{examination.examinationName,jdbcType=VARCHAR}
+            </if>
+            <if test="examination.cultivateId != null and examination.cultivateId != 0">
+                and ex.cultivateId = ${examination.cultivateId}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 新增考试实例 -->
+    <insert id="insertExamination" parameterType="com.emp.examinationManage.entity.Examination">
+        INSERT INTO tb_examination_manage(examinationName,cultivateId,examinationTime,examinationEndTime,examinationDataCode,examinationTimeLimit,makeupTime,makeupBeginTime,makeupNum,passingScoreLine,timingMode,isResit,isDisorder,isAnswerAnalysis)
+        values (#{examinationName},#{cultivateId},#{examinationTime},#{examinationEndTime},${examinationDataCode},${examinationTimeLimit},#{makeupTime},#{makeupBeginTime},#{makeupNum},#{passingScoreLine},#{timingMode},#{isResit},#{isDisorder},#{isAnswerAnalysis});
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID() as id
+        </selectKey>
+    </insert>
+
+
+    <!-- 新增考试学员关联实例(从培训表获取学员信息) -->
+    <insert id="addES">
+        INSERT INTO tb_examination_student(examinationId,cultivateId,studentId)
+        select #{examinationId},cultivateId,studentId from tb_cultivate_student where cultivateId = #{cultivateId}
+    </insert>
+
+
+    <!-- 新增考试学员关联实例,培训管理-增加学员 -->
+    <insert id="addCES">
+        INSERT INTO tb_examination_student(examinationId,cultivateId,studentId) values
+        <foreach collection="ids" item="ids" separator=",">
+            (#{examinationId},#{cultivateId},#{ids})
+        </foreach>
+    </insert>
+
+
+    <!-- 删除考试学员关联实例,培训管理-删除学员 -->
+    <delete id="deleteCES">
+        delete from tb_examination_student where cultivateId = #{cultivateId} and studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+
+
+    <!-- 删除考试学员关联实例 -->
+    <delete id="deleteCESById">
+        delete from tb_examination_student where examinationId = #{examinationId}
+    </delete>
+
+
+    <!-- 修改考试设置 -->
+    <update id="updateExamination" parameterType="com.emp.examinationManage.entity.Examination">
+        update tb_examination_manage set
+            examinationName = #{examination.examinationName},
+            cultivateId = #{examination.cultivateId},
+            examinationTime = #{examination.examinationTime},
+            examinationEndTime = #{examination.examinationEndTime},
+            examinationTimeLimit = ${examination.examinationTimeLimit},
+            examinationDataCode = ${examination.examinationDataCode},
+            makeupBeginTime = #{examination.makeupBeginTime},
+            makeupTime = #{examination.makeupTime},
+            makeupNum = #{examination.makeupNum},
+            passingScoreLine = #{examination.passingScoreLine},
+            timingMode = #{examination.timingMode},
+            isResit = #{examination.isResit},
+            isDisorder = #{examination.isDisorder},
+            isAnswerAnalysis = #{examination.isAnswerAnalysis},
+            updateTime = current_timestamp
+        where status = 1 and id = #{examination.id}
+    </update>
+
+
+
+    <!-- 根据条件模糊查询可增加到该考试的学员列表详情 -->
+    <select id="queryESByLike" resultType="com.emp.studentManage.entity.Student">
+        select id,realName,sex,idCard,phone,unit,department,job,email,updateTime from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        <if test="examinationId != null">
+            and id
+            <choose>
+                <when test="type !=null and type == 'add'">
+                    not in
+                </when>
+                <otherwise>
+                    in
+                </otherwise>
+            </choose>
+            (select studentId from tb_examination_student where examinationId = #{examinationId,jdbcType=VARCHAR})
+        </if>
+        order by id asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询可增加到该考试的学员列表总条数 -->
+    <select id="countESByLike" resultType="int">
+        select count(*) from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        <if test="examinationId != null">
+            and id
+            <choose>
+                <when test="type !=null and type == 'add'">
+                    not in
+                </when>
+                <otherwise>
+                    in
+                </otherwise>
+            </choose>
+            (select studentId from tb_examination_student where examinationId = #{examinationId,jdbcType=VARCHAR})
+        </if>
+    </select>
+
+
+    <!-- 根据学员ID查询考试学员中间表是否已经存在该学员 -->
+    <select id="countEsById" resultType="int">
+        select count(*) from tb_examination_student where 1=1
+        <if test="es != null">
+            <if test="es.studentId != null">
+                and studentId = ${es.studentId}
+            </if>
+            <if test="es.examinationId != null">
+                and examinationId = ${es.examinationId}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据考试ID查询试卷详情 -->
+    <select id="queryTestPaper" resultType="com.emp.examinationManage.entity.TestPaperExamination">
+        select * from tb_testPaper_examination where status = 1
+        <if test="examinationId != null">
+            and examinationId = #{examinationId}
+        </if>
+    </select>
+
+
+    <!-- 根据考试ID查询试卷详情 -->
+    <select id="queryTestPaperByWeChat" resultType="com.emp.examinationManage.entity.TestPaperExamination">
+        select te.*,es.examinationCode from tb_testPaper_examination te left join tb_examination_student es on te.examinationId = es.examinationId where status = 1
+        <if test="examinationId != null">
+            and te.examinationId = #{examinationId}
+        </if>
+        <if test="studentId != null">
+            and es.studentId = #{studentId}
+        </if>
+    </select>
+
+
+    <!-- 新增试题 -->
+    <insert id="insertTestPaper" parameterType="com.emp.examinationManage.entity.TestPaperExamination">
+        INSERT INTO tb_testPaper_examination(content,examinationId,totalScore) values (#{te.content},${te.examinationId},${te.totalScore});
+    </insert>
+
+
+    <!-- 修改试题(不是用id就是用examinationId) -->
+    <update id="updateTestPaper" parameterType="com.emp.examinationManage.entity.TestPaperExamination">
+        update tb_testPaper_examination set
+            content = #{te.content},
+            isPublish = ${te.isPublish},
+            totalScore = ${te.totalScore},
+            updateTime = current_timestamp
+        where status = 1
+        <choose>
+            <when test="te.id != null">
+                and id = ${te.id}
+            </when>
+            <otherwise>
+                and examinationId = ${te.examinationId}
+            </otherwise>
+        </choose>
+    </update>
+
+
+
+    <!-- 存储过程:根据考试ID和输入的考试名称创建一个新的考试,包括试卷和学生(复制试卷) -->
+    <select id="addExaminationByCopy" parameterMap="c_map" statementType="CALLABLE">
+         {CALL proc_addExaminationByCopy(?,?,?)}
+    </select>
+    <parameterMap id="c_map" type="java.util.Map">
+        <parameter property="t_examinationId" jdbcType="VARCHAR" mode="IN"></parameter>
+        <parameter property="t_inputName" jdbcType="VARCHAR" mode="IN"></parameter>
+        <parameter property="t_result" jdbcType="VARCHAR" mode="OUT"></parameter>
+    </parameterMap>
+
+
+
+    <!-- 重新发布后重置学员的答卷信息和考试信息 -->
+    <update id="updateESByPublish">
+        update tb_examination_student set
+            answer = null,
+            examinationCode = 0,
+            openTime = null,
+            closeTime = null,
+            stuMakeUpNum = 0,
+            isPassing = null,
+            score = null,
+            certificateNo = null,
+            certificateTime = null,
+            willCloseTime = null,
+            updateTime = current_timestamp
+        where examinationId = ${examinationId}
+    </update>
+
+
+    <!-- 获取参加考试的学员 -->
+    <select id="queryEC" resultType="com.emp.studentManage.entity.StudentExamination">
+        select * from tv_studentexamination where 1 = 1
+        <if test="ec.examinationId != null">
+            and examinationId = #{ec.examinationId,jdbcType=VARCHAR}
+        </if>
+        <if test="ec.studentId != null">
+            and studentId = #{ec.studentId,jdbcType=VARCHAR}
+        </if>
+        <if test="ec.certificateNo != null">
+            and certificateNo = #{ec.certificateNo,jdbcType=VARCHAR}
+        </if>
+        order by studentId asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 获取参加考试的学员总条数 -->
+    <select id="countEC" resultType="int">
+        select count(*) from tv_studentexamination where 1 = 1
+        <if test="ec.examinationId != null">
+            and examinationId = #{ec.examinationId,jdbcType=VARCHAR}
+        </if>
+        <if test="ec.studentId != null">
+            and studentId = #{ec.studentId,jdbcType=VARCHAR}
+        </if>
+    </select>
+
+
+    <!-- 回收试题 -->
+    <update id="updateECAllCode">
+        update tb_examination_student set examinationCode = 2,updateTime = current_timestamp,closeTime = current_timestamp
+        where examinationCode = 1 and examinationId = #{examinationId,jdbcType=VARCHAR}
+        <if test="studentId != null">
+            and studentId = #{studentId,jdbcType=VARCHAR}
+        </if>
+    </update>
+
+
+    <!-- 修改试卷发布状态 -->
+    <update id="updateTPByPublish">
+        update tb_testPaper_examination set
+            isPublish = 1,
+            updateTime = current_timestamp
+        where status = 1 and examinationId = ${examinationId}
+    </update>
+
+
+    <!-- 试卷是否发布操作(上面的也可以用这个,不过懒得改) -->
+    <update id="updatePublishStatus" parameterType="com.emp.examinationManage.entity.TestPaperExamination">
+        update tb_testPaper_examination set
+        isPublish = ${te.isPublish},
+        updateTime = current_timestamp
+        where status = 1 and examinationId = ${te.examinationId}
+    </update>
+
+
+    <!-- 修改打开试卷(考试中) -->
+    <update id="updateECbyExamination">
+        update tb_examination_student set
+        openTime = ifnull(openTime,current_timestamp),
+        examinationCode = 1,
+        updateTime = current_timestamp
+        where examinationId = #{examinationId,jdbcType=VARCHAR} and studentId = #{studentId,jdbcType=VARCHAR}
+    </update>
+
+
+    <!-- 定时任务扫描进行修改考试状态 -->
+    <update id="updateExaminationDataCode">
+        update tb_examination_manage set examinationDataCode =
+        (case when IFNULL(examinationEndTime,date_add(examinationTime, interval examinationTimeLimit minute)) &lt; CURRENT_TIMESTAMP then 2 else
+        (case when examinationTime &gt; CURRENT_TIMESTAMP then 0 else 1 end) end) where status = 1 and examinationDataCode != 2;
+
+        <!--&lt;!&ndash; 考试已结束,但是学生考试状态还是考试中的(这种一般是考一半关了不管的),根据考试状态来改 &ndash;&gt;-->
+        <!--update tb_examination_student es set es.examinationCode = (case when es.answer is null then 0 else 2 end),willCloseTime = null-->
+        <!--where es.examinationCode = 1 and examinationId in (select id from tb_examination_manage em where status = 1 and examinationDataCode = 2);-->
+
+        <!--&lt;!&ndash; 考试未结束,但是学生考试状态还是考试中的(这种一般是考一半关了不管的),根据学员的预计考试结束时间大于当前时间来改 &ndash;&gt;-->
+        <!--update tb_examination_student es set es.examinationCode = (case when es.answer is null then 0 else 2 end),willCloseTime = null-->
+        <!--where es.examinationCode = 1 and willCloseTime is not null and willCloseTime &lt; CURRENT_TIMESTAMP;-->
+
+
+        <!-- 考试已结束,但是学生考试状态还是考试中的(这种一般是考一半关了不管的),根据考试状态来改 -->
+--         update tb_examination_student es set es.examinationCode = 2,willCloseTime = null
+--         where es.examinationCode = 1 and examinationId in (select id from tb_examination_manage em where status = 1 and examinationDataCode = 2);
+
+        <!-- 考试未结束,但是学生考试状态还是考试中的(这种一般是考一半关了不管的),根据学员的预计考试结束时间大于当前时间来改 -->
+        update tb_examination_student es set es.examinationCode = 2,willCloseTime = null
+        where es.examinationCode = 1 and willCloseTime is not null and willCloseTime &lt; CURRENT_TIMESTAMP;
+    </update>
+
+
+    <!-- 保存作答信息 -->
+    <update id="saveTpByWeChat">
+        update tb_examination_student set
+            answer = #{es.answer},
+            examinationCode = 2,
+            score = #{es.score},
+            isPassing = ${es.isPassing},
+            <choose>
+                <when test="es.certificateNo != null">
+                    certificateNo = #{es.certificateNo},
+                    certificateTime = current_timestamp,
+                </when>
+                <otherwise>
+                    certificateNo = #{es.certificateNo},
+                    certificateTime = null,
+                </otherwise>
+            </choose>
+            closeTime = current_timestamp,
+            updateTime = current_timestamp,
+            willCloseTime = null
+        where examinationId = ${es.examinationId} and studentId = ${es.studentId}
+    </update>
+
+
+
+    <!-- 定时任务查找需要发布的成绩(比当前时间小的)  -->
+    <select id="queryTaskReleaseEC" resultType="com.emp.examinationManage.entity.Examination">
+        select * from tb_examination_manage where isRelease = 0 and releaseTime &lt; DATE_FORMAT(now(),'%Y-%m-%d %H:%i:%s')
+    </select>
+
+
+
+    <!-- 发布成绩 -->
+    <update id="updateByReleaseEC" parameterType="com.emp.examinationManage.entity.Examination">
+        update tb_examination_manage set
+            isRelease = ${examination.isRelease},
+            <choose>
+                <when test="examination.releaseTime != null and examination.releaseTime != '' and examination.isRelease == 0">
+                    releaseTime = DATE_FORMAT(#{examination.releaseTime},'%Y-%m-%d %H:%i:%s'),
+                </when>
+                <when test="examination.isRelease == 1">
+                    releaseTime = current_timestamp ,
+                </when>
+                <otherwise>
+                    releaseTime = null ,
+                </otherwise>
+            </choose>
+            updateTime = current_timestamp
+        where status = 1 and id = #{examination.id}
+    </update>
+
+
+
+
+
+    <!-- 定时任务查找需要发布的证书(比当前时间小的)  -->
+    <select id="queryTaskReleaseCN" resultType="com.emp.examinationManage.entity.Examination">
+        select * from tb_examination_manage where isCertificateNo = 0 and certificateNoTime &lt; DATE_FORMAT(now(),'%Y-%m-%d %H:%i:%s')
+    </select>
+
+
+    <!-- 发布证书 -->
+    <update id="updateByReleaseCN" parameterType="com.emp.examinationManage.entity.Examination">
+        update tb_examination_manage set
+        isCertificateNo = ${examination.isCertificateNo},
+        <choose>
+            <when test="examination.certificateNoTime != null and examination.certificateNoTime != '' and examination.isCertificateNo == 0">
+                certificateNoTime = DATE_FORMAT(#{examination.certificateNoTime},'%Y-%m-%d %H:%i:%s'),
+            </when>
+            <when test="examination.isCertificateNo == 1">
+                certificateNoTime = current_timestamp ,
+            </when>
+            <otherwise>
+                certificateNoTime = null ,
+            </otherwise>
+        </choose>
+        updateTime = current_timestamp
+        where status = 1 and id = #{examination.id}
+    </update>
+
+
+
+
+    <!-- 补考修改状态(考试状态改为考试中 , 补考次数要更新 , 是否及格,答卷,提交试卷时间 和 成绩清空  , 打开试卷时间要改为当前) -->
+    <update id="updateECbyResit">
+        update tb_examination_student set examinationCode = 1,openTime = current_timestamp,updateTime = current_timestamp,stuMakeUpNum = stuMakeUpNum + 1,
+        isPassing = null,answer=null,closeTime=null,score=null
+        where examinationId = #{examinationId,jdbcType=VARCHAR} and studentId = #{studentId,jdbcType=VARCHAR}
+    </update>
+
+
+    <!-- 预计关闭试卷时间 -->
+    <update id="updateWillCloseTime">
+        update tb_examination_student set willCloseTime = DATE_FORMAT(#{willCloseTime},'%Y-%m-%d %H:%i:%s'),updateTime = current_timestamp
+        where examinationId = #{examinationId,jdbcType=VARCHAR} and studentId = #{studentId,jdbcType=VARCHAR}
+    </update>
+
+
+    <!-- 根据培训ID获取考试json数据(公众号接口) -->
+    <select id="getExaminationByWeChat" resultType="com.emp.examinationManage.entity.Examination">
+        select ex.id,ex.examinationName,ex.examinationTime,ex.examinationTimeLimit,ex.examinationDataCode,ex.makeupBeginTime,ex.makeupTime,ex.makeupNum,ex.isResit,
+        (select count(1) from tb_examination_student where examinationId=ex.id) as examinationNum,
+        (case when ex.examinationDataCode = 2 then (select count(1) from tb_examination_student tes where tes.examinationId = ex.id and tes.score >= ex.passingScoreLine) else 0 end) as passingNum,
+        cu.id as cultivateId,cu.cultivateName,cu.cultivateType,cu.beginTime,cu.endTime,ex.passingScoreLine,ex.timingMode,ex.isRelease,ex.isAnswerAnalysis
+        from tb_examination_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id
+        left join tb_examination_student es on ex.id = es.examinationId
+        where ex.status = 1 and cu.status = 1
+        <if test="examination != null">
+            <if test="examination.cultivateId != null and examination.cultivateId != 0">
+                and ex.cultivateId = ${examination.cultivateId}
+            </if>
+            <if test="studentId != null">
+                and es.studentId = ${studentId}
+            </if>
+            <if test="type != null">
+                <choose>
+                    <when test="type == 0">
+                        and es.examinationCode in (0,1)
+                    </when>
+                    <otherwise>
+                        and es.examinationCode = 2
+                    </otherwise>
+                </choose>
+            </if>
+        </if>
+        order by ex.id asc
+    </select>
+
+
+
+    <!-- 查询考试状态(公众号接口) -->
+    <select id="queryEcCodeByWeChat" resultType="int">
+        select examinationCode from tb_examination_student where 1 = 1
+        <if test="es.examinationId != null">
+            and examinationId = #{es.examinationId,jdbcType=VARCHAR}
+        </if>
+        <if test="es.studentId != null">
+            and studentId = #{es.studentId,jdbcType=VARCHAR}
+        </if>
+        limit 1
+    </select>
+
+
+    <!-- 删除考试实例(包括中间表和考试表) -->
+    <delete id="deleteExaminations" parameterType="int[]">
+        <!--删除试卷-->
+        delete from tb_testPaper_examination where examinationId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除考试的学员-->
+        delete from tb_examination_student where examinationId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除考试-->
+        delete from tb_examination_manage where id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+    </delete>
+
+</mapper>

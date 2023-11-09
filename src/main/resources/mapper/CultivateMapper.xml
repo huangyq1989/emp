@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 映射 接口 CultivateDao -->
+<mapper namespace="com.emp.cultivateManage.dao.CultivateDao">
+
+
+    <!-- 根据条件模糊查询培训列表详情 -->
+    <select id="queryCultivateByLike" resultType="com.emp.cultivateManage.entity.Cultivate">
+        select id,cultivateName,cultivateType,beginTime,endTime,(select count(1) from tb_cultivate_student where cultivateId=c.id) as cultivateNum
+          ,cultivateDataCode from tb_cultivate_manage c where status = 1
+        <if test="cultivate != null">
+            <if test="cultivate.cultivateName != null">
+                and cultivateName like "%"#{cultivate.cultivateName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="cultivate.beginTime != null">
+                and DATE_FORMAT(beginTime,'%Y-%m-%d') &gt;= #{cultivate.beginTime,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.endTime != null">
+                and DATE_FORMAT(endTime,'%Y-%m-%d') &lt;= #{cultivate.endTime,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.cultivateDataCode != null">
+                and cultivateDataCode = ${cultivate.cultivateDataCode}
+            </if>
+        </if>
+        order by FIELD(cultivateDataCode,1,0,2),beginTime asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询培训列表总条数 -->
+    <select id="countCultivateByLike" resultType="int">
+        select count(*) from tb_cultivate_manage where status = 1
+        <if test="cultivate != null">
+            <if test="cultivate.cultivateName != null">
+                and cultivateName like "%"#{cultivate.cultivateName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="cultivate.beginTime != null">
+                and DATE_FORMAT(beginTime,'%Y-%m-%d') &gt;= #{cultivate.beginTime,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.endTime != null">
+                and DATE_FORMAT(endTime,'%Y-%m-%d') &lt;= #{cultivate.endTime,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.cultivateDataCode != null">
+                and cultivateDataCode = ${cultivate.cultivateDataCode}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据勾选查询培训列表详情 -->
+    <select id="queryCultivateByCheck" parameterType="int[]" resultType="com.emp.cultivateManage.entity.Cultivate">
+        select id,cultivateName,cultivateType,beginTime,endTime,(select count(1) from tb_cultivate_student where cultivateId=c.id) as cultivateNum
+        ,cultivateDataCode from tb_cultivate_manage c where status = 1 and id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        order by id asc
+    </select>
+
+
+    <!-- 查询最大ID -->
+    <select id="queryAutoId" resultType="int">
+        SELECT AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'tb_cultivate_manage'
+    </select>
+
+
+    <!-- 根据条件查询培训实例 -->
+    <select id="queryCultivateByEquals" resultType="com.emp.cultivateManage.entity.Cultivate">
+        select * from tb_cultivate_manage where status = 1
+        <if test="cultivate != null">
+            <if test="cultivate.cultivateName != null">
+                and cultivateName = #{cultivate.cultivateName,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.beginTime != null">
+                and DATE_FORMAT(beginTime,'%Y-%m-%d') &gt;= #{cultivate.beginTime,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.endTime != null">
+                and DATE_FORMAT(endTime,'%Y-%m-%d') &lt;= #{cultivate.endTime,jdbcType=VARCHAR}
+            </if>
+            <if test="cultivate.cultivateDataCode != null">
+                and cultivateDataCode = ${cultivate.cultivateDataCode}
+            </if>
+            <if test="cultivate.id != null and cultivate.id != 0">
+                and id = ${cultivate.id}
+            </if>
+            order by id asc
+        </if>
+    </select>
+
+
+    <!-- 新增培训实例 -->
+    <insert id="insertCultivate" parameterType="com.emp.cultivateManage.entity.Cultivate">
+        INSERT INTO tb_cultivate_manage(cultivateName,cultivateType,beginTime,endTime,cultivateDataCode)
+        values (#{cultivateName},#{cultivateType},DATE_FORMAT(#{beginTime},'%Y-%m-%d %H:%i:%s'),DATE_FORMAT(#{endTime},'%Y-%m-%d %H:%i:%s'),
+        ${cultivateDataCode});
+        <!-- 需要返回自增主键:1.dao参数不能加注解 2.增加下面语句 -->
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID() as id
+        </selectKey>
+    </insert>
+
+
+    <!-- 修改培训实例 -->
+    <update id="updateCultivate" parameterType="com.emp.cultivateManage.entity.Cultivate">
+        update tb_cultivate_manage set
+            cultivateName = #{cultivate.cultivateName},
+            cultivateType = #{cultivate.cultivateType},
+            beginTime = DATE_FORMAT(#{cultivate.beginTime},'%Y-%m-%d %H:%i:%s'),
+            endTime = DATE_FORMAT(#{cultivate.endTime},'%Y-%m-%d %H:%i:%s'),
+            cultivateDataCode = ${cultivate.cultivateDataCode},
+            updateTime = current_timestamp
+        where status = 1 and id = #{cultivate.id}
+    </update>
+
+
+    <!-- 修改培训状态为失效 -->
+    <update id="updateCultivateStatus" parameterType="int[]">
+        update tb_cultivate_manage set status = 0,updateTime = current_timestamp where status = 1 and id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </update>
+
+
+    <!-- 删除培训实例(包括中间表和考试表) -->
+    <delete id="deleteCultivates" parameterType="int[]">
+        <!--删除试卷-->
+        delete from tb_testPaper_examination where examinationId in (SELECT ID FROM tb_examination_manage WHERE cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        );
+        <!--删除考试的学员-->
+        delete from tb_examination_student where cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除考试-->
+        delete from tb_examination_manage where cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+
+        <!--删除问卷-->
+        delete from tb_questionnaire_estimate where estimateId in (SELECT ID FROM tb_estimate_manage WHERE cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        );
+        <!--删除评估的学员-->
+        delete from tb_estimate_student where cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除评估-->
+        delete from tb_estimate_manage where cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+
+        <!--删除培训-->
+        delete from tb_cultivate_manage where id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除培训的学员-->
+        delete from tb_cultivate_student where cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除培训短信-->
+        delete from tb_cultivate_note where cultivateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+    </delete>
+
+
+    <!-- 根据条件查询培训学员中间表是否已经存在该学员 -->
+    <select id="countCsById" resultType="int">
+        select count(*) from tb_cultivate_student where 1=1
+        <if test="cs != null">
+            <if test="cs.studentId != null">
+                and studentId = ${cs.studentId}
+            </if>
+            <if test="cs.cultivateId != null">
+                and cultivateId = ${cs.cultivateId}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 新增培训学员关联实例(导入按钮) -->
+    <insert id="insertCs" parameterType="com.emp.cultivateManage.entity.CultivateStudent">
+        INSERT INTO tb_cultivate_student(cultivateId,studentId) values (${cs.cultivateId},${cs.studentId});
+    </insert>
+
+
+    <!-- 根据条件模糊查询可增加到该培训的学员列表详情 -->
+    <select id="queryCSByLike" resultType="com.emp.studentManage.entity.Student">
+        select * from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        <if test="cultivateId != null">
+            and id
+            <choose>
+                <when test="type !=null and type == 'add'">
+                    not in
+                </when>
+                <otherwise>
+                    in
+                </otherwise>
+            </choose>
+            (select studentId from tb_cultivate_student where cultivateId = #{cultivateId,jdbcType=VARCHAR})
+        </if>
+        order by id asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询可增加到该培训的学员列表总条数 -->
+    <select id="countCSByLike" resultType="int">
+        select count(*) from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        <if test="cultivateId != null">
+            and id
+            <choose>
+                <when test="type !=null and type == 'add'">
+                    not in
+                </when>
+                <otherwise>
+                    in
+                </otherwise>
+            </choose>
+            (select studentId from tb_cultivate_student where cultivateId = #{cultivateId,jdbcType=VARCHAR})
+        </if>
+    </select>
+
+
+    <!-- 根据勾选查询培训学员列表详情 -->
+    <select id="queryCsByCheck" parameterType="int[]" resultType="com.emp.studentManage.entity.Student">
+        select * from tb_student_manage where status = 1 and id in
+        (select studentId from tb_cultivate_student where studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>)
+        order by id asc
+    </select>
+
+
+    <!-- 新增培训学员关联实例(新增按钮) -->
+    <insert id="addCS">
+        INSERT INTO tb_cultivate_student(cultivateId,studentId) values
+        <foreach collection="ids" item="ids" separator=",">
+            (#{cultivateId},#{ids})
+        </foreach>
+    </insert>
+
+
+    <!-- 删除培训学员关联实例 -->
+    <delete id="deleteCS">
+        delete from tb_cultivate_student where cultivateId = #{cultivateId} and studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+
+
+    <!-- 保存短信信息 -->
+    <insert id="saveSendData" parameterType="com.emp.cultivateManage.entity.CultivateNote">
+        INSERT INTO tb_cultivate_note(cultivateId,content,peopleDatail,sendDataCode,peopleNum
+        <if test="note.sendTime != null and note.sendTime != ''">
+            ,sendTime
+        </if>
+        )
+        values (#{note.cultivateId},#{note.content},#{note.peopleDatail},${note.sendDataCode},#{note.peopleNum}
+        <if test="note.sendTime != null and note.sendTime != ''">
+            ,DATE_FORMAT(#{note.sendTime},'%Y-%m-%d %H:%i:%s')
+        </if>
+        );
+    </insert>
+
+
+    <!-- 修改短信状态 -->
+    <update id="updateSendData" parameterType="com.emp.cultivateManage.entity.CultivateNote">
+        update tb_cultivate_note set sendDataCode = ${note.sendDataCode},updateTime = current_timestamp where id = ${note.id}
+    </update>
+
+
+    <!-- 根据条件查询短信记录 -->
+    <select id="querySendData" resultType="com.emp.cultivateManage.entity.CultivateNote">
+        select * from tb_cultivate_note where 1=1
+        <if test="note != null">
+            <if test="note.cultivateId != null and note.cultivateId != 0">
+                and cultivateId = ${note.cultivateId}
+            </if>
+            <if test="note.insertTime != null">
+                and DATE_FORMAT(insertTime,'%Y-%m-%d') = #{note.insertTime,jdbcType=VARCHAR}
+            </if>
+            <if test="note.sendDataCode != null">
+                and sendDataCode = ${note.sendDataCode}
+            </if>
+        </if>
+        order by id asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 定时任务查找需要发短信的记录(比当前时间小的) -->
+    <select id="queryTaskSendData" resultType="com.emp.cultivateManage.entity.CultivateNote">
+        select * from tb_cultivate_note where 1=1 and sendTime &lt; DATE_FORMAT(now(),'%Y-%m-%d %H:%i:%s')
+        <if test="note != null">
+            <if test="note.sendDataCode != null">
+                and sendDataCode = ${note.sendDataCode}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件统计短信记录总条数 -->
+    <select id="countSendData" resultType="int">
+        select count(*) from tb_cultivate_note where 1=1
+        <if test="note != null">
+            <if test="note.cultivateId != null and note.cultivateId != 0">
+                and cultivateId = ${note.cultivateId}
+            </if>
+            <if test="note.insertTime != null">
+                and DATE_FORMAT(insertTime,'%Y-%m-%d') = #{note.insertTime,jdbcType=VARCHAR}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 定时任务扫描进行修改培训状态 -->
+    <update id="updateCultivateDataCode">
+        update tb_cultivate_manage set cultivateDataCode =
+        (case when endTime &lt; CURRENT_TIMESTAMP then 2 else (case when beginTime &gt; CURRENT_TIMESTAMP then 0 else 1 end) end) where status = 1 and cultivateDataCode != 2
+    </update>
+
+
+
+
+    <!-- 根据条件模糊查询培训指引列表详情 -->
+    <select id="queryCultivateGuideByLike" resultType="com.emp.cultivateManage.entity.CultivateGuide">
+        select * from tb_cultivate_guide where cultivateId = ${cg.cultivateId}
+        <if test="cg != null">
+            <if test="cg.fileName != null">
+                and fileName like "%"#{cg.fileName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="cg.insertTime != null">
+                and DATE_FORMAT(insertTime,'%Y-%m-%d') &gt;= #{cg.insertTime,jdbcType=VARCHAR}
+            </if>
+        </if>
+        order by insertTime asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询培训指引列表总条数 -->
+    <select id="countCultivateGuideByLike" resultType="int">
+        select count(*) from tb_cultivate_guide where cultivateId = ${cg.cultivateId}
+        <if test="cg != null">
+            <if test="cg.fileName != null">
+                and fileName like "%"#{cg.fileName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="cg.insertTime != null">
+                and DATE_FORMAT(insertTime,'%Y-%m-%d') &gt;= #{cg.insertTime,jdbcType=VARCHAR}
+            </if>
+        </if>
+        order by insertTime asc
+    </select>
+
+
+    <!-- 新增培训指引实例 -->
+    <insert id="insertCultivateGuide" parameterType="com.emp.cultivateManage.entity.CultivateGuide">
+        INSERT INTO tb_cultivate_guide(cultivateId,fileName,filePath)values (${cg.cultivateId},#{cg.fileName},#{cg.filePath})
+    </insert>
+
+
+
+    <!-- 获取培训指引(公众号接口) -->
+    <select id="queryGuideByWeChat" resultType="string">
+        select guideText from tb_cultivate_manage where status = 1
+        <if test="cultivate.id != null">
+            and id = #{cultivate.id,jdbcType=VARCHAR}
+        </if>
+        limit 1
+    </select>
+
+
+    <!-- 根据指引ID删除培训指引 -->
+    <delete id="deleteCg" parameterType="int[]">
+        delete from tb_cultivate_guide where id = #{cgId}
+    </delete>
+
+
+    <!-- 根据培训ID删除培训指引 -->
+    <delete id="deleteCgByCultivateId" parameterType="int[]">
+        delete from tb_cultivate_guide where cultivateId = #{cultivateId}
+    </delete>
+
+
+    <!-- 获取失效的指引数据 -->
+    <select id="queryLoseGuide" resultType="Integer">
+        select DISTINCT cg.cultivateId from tb_cultivate_guide cg left join tb_cultivate_manage cm on cg.cultivateId = cm.id where cm.cultivateName is null
+    </select>
+
+</mapper>

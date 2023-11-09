@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app>
+    <display-name>EMP SYSTEM</display-name>
+
+    <!--配置 Spring 容器-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <!-- spring配置文件 -->
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+
+    <!--配置 Spring mvc 容器 , 将所有请求，都交给Spring MVC 处理-->
+    <servlet>
+        <servlet-name>emp</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <!-- springMvc配置文件 -->
+            <param-value>classpath:springmvc-servlet.xml</param-value>
+        </init-param>
+    </servlet>
+    <!--将 请求 截取 转交给 emp -->
+    <servlet-mapping>
+        <servlet-name>emp</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+
+    <!--拦截器-->
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>com.emp.systemManage.filter.AuthenticationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>*.do</url-pattern>
+    </filter-mapping>
+
+
+    <!--Spring字符过滤器-->
+    <filter>  
+        <filter-name>encodingFilter</filter-name>  
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>  
+        <init-param>  
+            <param-name>encoding</param-name>  
+            <param-value>UTF-8</param-value>  
+        </init-param>  
+    </filter>  
+    <filter-mapping>  
+        <filter-name>encodingFilter</filter-name>  
+        <url-pattern>/*</url-pattern>  
+    </filter-mapping>  
+
+
+    <!--upload Servlet-->
+    <servlet>
+        <servlet-name>Upload</servlet-name>
+        <servlet-class>com.emp.systemManage.controller.UpLoad</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Upload</servlet-name>
+        <url-pattern>/fileUpload/UploadServlet</url-pattern>
+    </servlet-mapping>
+
+
+    <!--log4j-->
+    <context-param>
+        <param-name>log4jConfigLocation</param-name>
+        <param-value>classpath:conf/log4j.properties</param-value>
+    </context-param>
+    <!-- 5000表示 开一条watchdog线程每60秒扫描一下配置文件的变化;这样便于日志存放位置的改变 -->
+    <context-param>
+        <param-name>log4jRefreshInterval</param-name>
+        <param-value>5000</param-value>
+    </context-param>
+
+
+    <!--  error page  -->
+    <error-page>
+        <error-code>303</error-code>
+        <location>/WEB-INF/views/303Error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/views/404Error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/views/500Error.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>505</error-code>
+        <location>/WEB-INF/views/500Error.jsp</location>
+    </error-page>
+
+</web-app>

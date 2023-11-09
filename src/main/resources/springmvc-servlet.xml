@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/task
+            http://www.springframework.org/schema/task/spring-task-4.1.xsd
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- 扫描 控制层 (web) 下面 @Controller 注解的类 将其实例化，放入容器中,这个是在mvc文件配置 -->
+    <context:component-scan base-package="com.emp.*.controller"/>
+
+    <!-- 启动 mvc 的常用注解 -->
+    <mvc:annotation-driven/>
+
+    <!--将所有的静态资源，交给 Servlet 处理-->
+    <mvc:default-servlet-handler/>
+
+
+
+    <mvc:resources mapping="/css/**" location="/WEB-INF/css/"></mvc:resources>
+    <mvc:resources mapping="/scripts/**" location="/WEB-INF/scripts/"></mvc:resources>
+    <mvc:resources mapping="/images/**" location="/WEB-INF/images/"></mvc:resources>
+    <mvc:resources mapping="/ui/**" location="/WEB-INF/easyui1.7.0/"></mvc:resources>
+    <mvc:resources mapping="/importModel/**" location="/WEB-INF/importModel/"></mvc:resources>
+    <mvc:resources mapping="/alert/**" location="/WEB-INF/sweetalert/"></mvc:resources>
+    <mvc:resources mapping="/fonts/**" location="/WEB-INF/fonts/"></mvc:resources>
+    <mvc:resources mapping="/dist/**" location="/WEB-INF/dist/"></mvc:resources>
+
+
+    <!--配置 view 解析器-->
+    <!-- 页面接受数据 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+        <property name="prefix" value="/WEB-INF/views/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+
+
+    <!-- 任务调度器 -->
+    <context:component-scan base-package="com.emp.systemManage.controller"/>
+    <!-- 启用注解驱动的定时任务 -->
+    <task:annotation-driven scheduler="myScheduler"/>
+    <!-- 配置任务线程池 -->
+    <task:scheduler id="myScheduler" pool-size="20" />
+
+
+</beans>

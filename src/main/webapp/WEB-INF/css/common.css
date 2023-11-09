@@ -1,0 +1,57 @@
+﻿/* 闪现响应消息 */
+.my-alert {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  min-width: 300px;
+  max-width: 600px;
+  transform: translate(-50%,-50%);
+  z-index: 99999;
+  text-align: center;
+  padding: 15px;
+  border-radius: 3px;
+}
+
+.my-alert-success {
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+.my-alert-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+.my-alert-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+
+.my-alert-danger {
+  color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+}
+
+
+/* div居中 */
+.div_center {
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/* EasyUi DataGrid 标题换行 */
+.datagrid-header .datagrid-cell span {
+  white-space: normal !important;
+  word-wrap: normal !important;
+}
+
+

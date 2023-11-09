@@ -1,0 +1,237 @@
+﻿.ax_default {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:400;
+  font-style:normal;
+  font-size:13px;
+  color:#333333;
+  text-align:center;
+  line-height:normal;
+}
+._一级标题 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  font-size:32px;
+  text-align:left;
+}
+._二级标题 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  font-size:24px;
+  text-align:left;
+}
+._三级标题 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  font-size:18px;
+  text-align:left;
+}
+._四级标题 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  font-size:14px;
+  text-align:left;
+}
+._五级标题 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  text-align:left;
+}
+._六级标题 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  font-size:10px;
+  text-align:left;
+}
+._文本段落 {
+  text-align:left;
+}
+.connector {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-weight:400;
+  font-style:normal;
+  font-size:13px;
+  color:#1E1E1E;
+  text-align:center;
+  line-height:normal;
+}
+.line {
+}
+.box_1 {
+}
+.image {
+}
+.label {
+  font-size:14px;
+  text-align:left;
+}
+.flow_shape {
+}
+.arrow {
+}
+.text_field {
+  color:#000000;
+  text-align:left;
+}
+.checkbox {
+  text-align:left;
+}
+.radio_button {
+  text-align:left;
+}
+.html_button {
+  text-align:center;
+}
+.ellipse {
+}
+.box_2 {
+}
+.paragraph {
+  text-align:left;
+}
+.icon {
+}
+.placeholder {
+}
+.button {
+}
+.shape {
+}
+.image1 {
+  color:#000000;
+}
+.weui_btn_default {
+  font-size:18px;
+  color:#000000;
+}
+.weui_btn_default_mousedown {
+  color:rgba(0, 0, 0, 0.6);
+}
+.weui_btn_default_disable {
+  color:rgba(0, 0, 0, 0.298039215686275);
+}
+.link_button {
+  color:#169BD5;
+}
+.primary_button {
+  color:#FFFFFF;
+}
+.line1 {
+}
+._30号字_服务主标题，例如双行列表内的下方描述信息。__） {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-size:15px;
+  text-align:left;
+}
+._24号字_最小说明文本，例如列表时间态、版权信息等） {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-size:12px;
+  text-align:left;
+}
+.weui_btn_warn {
+  font-size:18px;
+  color:#FFFFFF;
+}
+.weui_btn_warn_mousedown {
+  color:rgba(255, 255, 255, 0.6);
+}
+.weui_btn_warn_disable {
+  color:rgba(255, 255, 255, 0.298039215686275);
+}
+.weui_btn_primary {
+  font-size:18px;
+  color:#FFFFFF;
+}
+.weui_btn_primary_mousedown {
+  color:rgba(255, 255, 255, 0.6);
+}
+.weui_btn_primary_disable {
+  color:rgba(255, 255, 255, 0.298039215686275);
+}
+._34号字_单行列表内，左方主标题文字字） {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-size:17px;
+  text-align:left;
+}
+.sticky_2 {
+  text-align:left;
+}
+.marker {
+  color:#FFFFFF;
+}
+._图片 {
+}
+._36号字_顶部标题、大按钮、弹窗提示主标题_ {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-size:18px;
+  text-align:left;
+}
+._32号字_单行列表内，右方操作说明的文字__） {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-size:16px;
+  text-align:left;
+}
+._28号字_页面备注信息及列表的表头说明文字__） {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  font-size:14px;
+  text-align:left;
+}
+.box_3 {
+}
+.weui_nav_default_default {
+  font-size:15px;
+}
+.weui_nav_default_on {
+}
+.image2 {
+}
+.vue_btn_primery {
+  font-family:'PingFang SC Regular', 'PingFang SC';
+  color:#FFFFFF;
+}
+.vue_btn_bluefill_activated {
+}
+.vue_btn_bluefill_selected {
+}
+.vue_btn_allfill_disable {
+  color:#C3CBD6;
+}
+._流程形状 {
+}
+.vue_paragraph {
+  color:#657180;
+  text-align:left;
+}
+.vue_heading_2 {
+  font-family:'Arial Normal', 'Arial';
+  font-weight:bold;
+  font-size:18px;
+  color:#464C5B;
+  text-align:left;
+}
+.vue_navigation_left_light_default {
+  font-family:'FontAwesome Regular', 'FontAwesome';
+  font-size:16px;
+  color:#657180;
+  text-align:left;
+}
+.vue_navigation_left_light_activated {
+  color:#FFFFFF;
+}
+.vue_navigation_left_light_selected {
+  color:#FFFFFF;
+}
+.vue_navigation_top_d_p_l_disable {
+  color:#C3CBD6;
+}
+.line2 {
+}
+.table_cell {
+}
+.droplist {
+  color:#000000;
+  text-align:left;
+}
+.text_area {
+  color:#000000;
+  text-align:left;
+}

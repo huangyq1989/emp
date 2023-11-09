@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 映射 接口 EstimateDao -->
+<mapper namespace="com.emp.estimateManage.dao.EstimateDao">
+
+
+    <!-- 根据条件模糊查询评估列表详情 -->
+    <select id="queryEstimateByLike" resultType="com.emp.estimateManage.entity.Estimate">
+        select ex.id,ex.estimateName,ex.estimateBeginTime,ex.estimateEndTime,ex.estimateDataCode,cu.id as cultivateId,cu.cultivateName,cu.cultivateType,cu.beginTime,cu.endTime,ex.answerLimitNum,tqe.isPublish
+        from tb_estimate_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id left join tb_questionnaire_estimate tqe on tqe.estimateId = ex.id
+        where ex.status = 1 and cu.status = 1
+        <if test="estimate != null">
+            <if test="estimate.cultivateName != null">
+                and cu.cultivateName like "%"#{estimate.cultivateName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="estimate.estimateBeginTime != null">
+                and DATE_FORMAT(ex.estimateBeginTime,'%Y-%m-%d') &gt;= #{estimate.estimateBeginTime,jdbcType=VARCHAR}
+            </if>
+            <if test="estimate.estimateEndTime != null">
+                and DATE_FORMAT(ex.estimateBeginTime,'%Y-%m-%d') &lt;= #{estimate.estimateEndTime,jdbcType=VARCHAR}
+            </if>
+            <if test="estimate.estimateDataCode != null">
+                and ex.estimateDataCode = ${estimate.estimateDataCode}
+            </if>
+            <if test="estimate.id != null and estimate.id != 0">
+                and ex.id = ${estimate.id}
+            </if>
+            <if test="estimate.cultivateId != null and estimate.cultivateId != 0">
+                and ex.cultivateId = ${estimate.cultivateId}
+            </if>
+            <if test="estimate.estimateName != null">
+                and ex.estimateName like "%"#{estimate.estimateName,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        order by FIELD(ex.estimateDataCode,1,0,2),cu.beginTime asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+
+    <!-- 根据条件模糊查询评估列表 -->
+    <select id="countEstimateByLike" resultType="int">
+        select count(1) from tb_estimate_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1
+        <if test="estimate != null">
+            <if test="estimate.cultivateName != null">
+                and cu.cultivateName like "%"#{estimate.cultivateName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="estimate.estimateBeginTime != null">
+                and DATE_FORMAT(ex.estimateBeginTime,'%Y-%m-%d') &gt;= #{estimate.estimateBeginTime,jdbcType=VARCHAR}
+            </if>
+            <if test="estimate.estimateEndTime != null">
+                and DATE_FORMAT(ex.estimateBeginTime,'%Y-%m-%d') &lt;= #{estimate.estimateEndTime,jdbcType=VARCHAR}
+            </if>
+            <if test="estimate.estimateDataCode != null">
+                and ex.estimateDataCode = ${estimate.estimateDataCode}
+            </if>
+            <if test="estimate.id != null and estimate.id != 0">
+                and ex.id = ${estimate.id}
+            </if>
+            <if test="estimate.cultivateId != null and estimate.cultivateId != 0">
+                and ex.cultivateId = ${estimate.cultivateId}
+            </if>
+            <if test="estimate.estimateName != null">
+                and ex.estimateName like "%"#{estimate.estimateName,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+    </select>
+
+
+
+    <!-- 根据条件查询评估列表 -->
+    <select id="queryEstimateByEquals" resultType="com.emp.estimateManage.entity.Estimate">
+        select ex.id,ex.estimateName,ex.estimateBeginTime,ex.estimateEndTime,ex.estimateDataCode,cu.id as cultivateId,cu.cultivateName,cu.cultivateType,cu.beginTime,cu.endTime
+        from tb_estimate_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1
+        <if test="estimate != null">
+            <if test="estimate.cultivateName != null">
+                and cu.cultivateName = #{estimate.cultivateName,jdbcType=VARCHAR}
+            </if>
+            <if test="estimate.estimateDataCode != null">
+                and ex.estimateDataCode = ${estimate.estimateDataCode}
+            </if>
+            <if test="estimate.id != null and estimate.id != 0">
+                and ex.id = ${estimate.id}
+            </if>
+            <if test="estimate.estimateName != null">
+                and ex.estimateName = #{estimate.estimateName,jdbcType=VARCHAR}
+            </if>
+        </if>
+    </select>
+
+
+
+    <!-- 根据条件查询评估列表总条数 -->
+    <select id="countEstimateByEquals" resultType="int">
+        select count(1) from tb_estimate_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id where ex.status = 1 and cu.status = 1
+        <if test="estimate != null">
+            <if test="estimate.cultivateName != null">
+                and cu.cultivateName = #{estimate.cultivateName,jdbcType=VARCHAR}
+            </if>
+            <if test="estimate.estimateDataCode != null">
+                and ex.estimateDataCode = ${estimate.estimateDataCode}
+            </if>
+            <if test="estimate.id != null and estimate.id != 0">
+                and ex.id = ${estimate.id}
+            </if>
+            <if test="estimate.estimateName != null">
+                and ex.estimateName = #{estimate.estimateName,jdbcType=VARCHAR}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 新增评估实例 -->
+    <insert id="insertEstimate" parameterType="com.emp.estimateManage.entity.Estimate">
+        INSERT INTO tb_estimate_manage(estimateName,cultivateId,estimateBeginTime,estimateEndTime,estimateDataCode,answerLimitNum) values (#{estimateName},#{cultivateId},DATE_FORMAT(#{estimateBeginTime},'%Y-%m-%d %H:%i:%s')
+        ,DATE_FORMAT(#{estimateEndTime},'%Y-%m-%d %H:%i:%s'),#{estimateDataCode},#{answerLimitNum});
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+            select LAST_INSERT_ID() as id
+        </selectKey>
+    </insert>
+
+
+    <!-- 修改评估设置 -->
+    <update id="updateEstimate" parameterType="com.emp.estimateManage.entity.Estimate">
+        update tb_estimate_manage set
+            estimateName = #{estimate.estimateName},
+            cultivateId = #{estimate.cultivateId},
+            estimateBeginTime = #{estimate.estimateBeginTime},
+            estimateEndTime = #{estimate.estimateEndTime},
+            estimateDataCode = ${estimate.estimateDataCode},
+            answerLimitNum = #{estimate.answerLimitNum},
+            updateTime = current_timestamp
+        where status = 1 and id = #{estimate.id}
+    </update>
+
+
+    <!-- 根据评估ID查询问卷详情 -->
+    <select id="queryQuestionnaire" parameterType="com.emp.estimateManage.entity.QuestionnaireEstimate" resultType="com.emp.estimateManage.entity.QuestionnaireEstimate">
+        select * from tb_questionnaire_estimate where status = 1
+        <if test="qi.estimateId != null">
+            and estimateId = #{qi.estimateId}
+        </if>
+    </select>
+
+
+    <!-- 新增问卷 -->
+    <insert id="insertQuestionnaire" parameterType="com.emp.estimateManage.entity.QuestionnaireEstimate">
+        INSERT INTO tb_questionnaire_estimate(content,estimateId) values (#{qi.content},${qi.estimateId});
+    </insert>
+
+
+    <!-- 修改问卷 -->
+    <update id="updateQuestionnaire" parameterType="com.emp.estimateManage.entity.QuestionnaireEstimate">
+        update tb_questionnaire_estimate set
+            <if test="qi.isPublish != null">
+                isPublish = #{qi.isPublish},
+            </if>
+            content = #{qi.content},
+            updateTime = current_timestamp
+        where status = 1 and id = ${qi.id}
+    </update>
+
+
+
+    <!-- 存储过程:根据评估ID和输入的评估名称创建一个新的评估,包括试卷和学生(复制问卷) -->
+    <select id="addEstimateByCopy" parameterMap="c_map" statementType="CALLABLE">
+         {CALL proc_addEstimateByCopy(?,?,?)}
+    </select>
+    <parameterMap id="c_map" type="java.util.Map">
+        <parameter property="t_estimateId" jdbcType="VARCHAR" mode="IN"></parameter>
+        <parameter property="t_inputName" jdbcType="VARCHAR" mode="IN"></parameter>
+        <parameter property="t_result" jdbcType="VARCHAR" mode="OUT"></parameter>
+    </parameterMap>
+
+
+
+    <!-- 修改问卷发布状态 -->
+    <update id="updateQEByPublish">
+        update tb_questionnaire_estimate set
+            isPublish = 1,
+            updateTime = current_timestamp
+        where status = 1 and estimateId = ${estimateId}
+    </update>
+
+
+
+    <!-- 重新发布后重置学员的答卷信息和评估信息 -->
+    <update id="updateESByPublish">
+        update tb_estimate_student set
+            answer = null,
+            answerNum = 0,
+            estimateCode = 0,
+            estimateTime = null,
+            updateTime = current_timestamp
+        where estimateId = ${estimateId}
+    </update>
+
+
+    <!-- 保存作答信息 -->
+    <update id="saveQiByWeChat">
+        update tb_estimate_student set
+            answer = #{es.answer},
+            estimateCode = 2,
+            answerNum = (answerNum + 1),
+            estimateTime = current_timestamp,
+            updateTime = current_timestamp
+        where estimateId = ${es.estimateId} and studentId = ${es.studentId}
+    </update>
+
+
+    <!-- 新增评估学员关联实例(从培训表获取学员信息) -->
+    <insert id="addES">
+        INSERT INTO tb_estimate_student(estimateId,cultivateId,studentId)
+        select #{estimateId},cultivateId,studentId from tb_cultivate_student where cultivateId = #{cultivateId}
+    </insert>
+
+
+    <!-- 根据条件模糊查询评估学员列表详情 -->
+    <select id="queryESByLike" resultType="com.emp.studentManage.entity.Student">
+        select id,realName,sex,idCard,phone,unit,department,job,email,updateTime from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        <if test="estimateId != null">
+            and id
+            <choose>
+                <when test="type !=null and type == 'add'">
+                    not in
+                </when>
+                <otherwise>
+                    in
+                </otherwise>
+            </choose>
+            (select studentId from tb_estimate_student where estimateId = #{estimateId,jdbcType=VARCHAR})
+        </if>
+        order by id asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据条件模糊查询评估学员列表总条数 -->
+    <select id="countESByLike" resultType="int">
+        select count(*) from tb_student_manage where status = 1
+        <if test="student != null">
+            <if test="student.realName != null">
+                and realName like "%"#{student.realName,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.unit != null">
+                and unit like "%"#{student.unit,jdbcType=VARCHAR}"%"
+            </if>
+            <if test="student.phone != null">
+                and phone like "%"#{student.phone,jdbcType=VARCHAR}"%"
+            </if>
+        </if>
+        <if test="estimateId != null">
+            and id
+            <choose>
+                <when test="type !=null and type == 'add'">
+                    not in
+                </when>
+                <otherwise>
+                    in
+                </otherwise>
+            </choose>
+            (select studentId from tb_estimate_student where estimateId = #{estimateId,jdbcType=VARCHAR})
+        </if>
+    </select>
+
+
+
+    <!-- 根据学员ID查询评估学员中间表 -->
+    <select id="queryEsById" resultType="com.emp.estimateManage.entity.EstimateStudent">
+        select * from tb_estimate_student where 1=1
+        <if test="es != null">
+            <if test="es.studentId != null">
+                and studentId = ${es.studentId}
+            </if>
+            <if test="es.estimateId != null">
+                and estimateId = ${es.estimateId}
+            </if>
+            <if test="es.estimateCode != null">
+                and estimateCode = ${es.estimateCode}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 根据学员ID统计评估学员中间表 -->
+    <select id="countEsById" resultType="int">
+        select count(*) from tb_estimate_student where 1=1
+        <if test="es != null">
+            <if test="es.studentId != null">
+                and studentId = ${es.studentId}
+            </if>
+            <if test="es.estimateId != null">
+                and estimateId = ${es.estimateId}
+            </if>
+            <if test="es.estimateCode != null">
+                and estimateCode = ${es.estimateCode}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 新增评估学员关联实例,培训管理-增加学员 -->
+    <insert id="addCES">
+        INSERT INTO tb_estimate_student(estimateId,cultivateId,studentId) values
+        <foreach collection="ids" item="ids" separator=",">
+            (#{estimateId},#{cultivateId},#{ids})
+        </foreach>
+    </insert>
+
+
+    <!-- 删除评估学员关联实例,培训管理-删除学员 -->
+    <delete id="deleteCES">
+        delete from tb_estimate_student where cultivateId = #{cultivateId} and studentId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+
+
+    <!-- 删除评估学员关联实例 -->
+    <delete id="deleteCESById">
+        delete from tb_estimate_student where estimateId = #{estimateId}
+    </delete>
+
+
+    <!-- 获取参加评估的学员 -->
+    <select id="queryEC" resultType="com.emp.studentManage.entity.StudentEstimate">
+        select * from tv_studentestimate where 1 = 1
+        <if test="ec.estimateId != null">
+            and estimateId = #{ec.estimateId,jdbcType=VARCHAR}
+        </if>
+        <if test="ec.studentId != null">
+            and studentId = #{ec.studentId,jdbcType=VARCHAR}
+        </if>
+        order by studentId asc
+        <if test="pages != null">
+            <if test="pages.startRow != null and pages.size != null">
+                limit ${pages.startRow},${pages.size}
+            </if>
+        </if>
+    </select>
+
+
+    <!-- 获取参加评估的学员总条数 -->
+    <select id="countEC" resultType="int">
+        select count(*) from tv_studentestimate where 1 = 1
+        <if test="ec.estimateId != null">
+            and estimateId = #{ec.estimateId,jdbcType=VARCHAR}
+        </if>
+        <if test="ec.studentId != null">
+            and studentId = #{ec.studentId,jdbcType=VARCHAR}
+        </if>
+    </select>
+
+
+
+    <!-- 导出评估结果已作答的原始Excel -->
+    <select id="queryEstimateResult" resultType="com.emp.studentManage.entity.StudentEstimate">
+        select * from tv_studentestimate where 1 = 1 and answer is not null
+        <if test="ec.estimateId != null">
+            and estimateId = #{ec.estimateId,jdbcType=VARCHAR}
+        </if>
+        <if test="ec.studentId != null">
+            and studentId = #{ec.studentId,jdbcType=VARCHAR}
+        </if>
+        order by studentId asc
+    </select>
+
+
+
+    <!-- 定时任务扫描进行修改评估状态 -->
+    <update id="updateEstimateDataCode">
+         update tb_estimate_manage set estimateDataCode =
+        (case when estimateEndTime &lt; CURRENT_TIMESTAMP then 2 else (case when estimateBeginTime &gt; CURRENT_TIMESTAMP then 0 else 1 end) end)
+        where status = 1 and estimateDataCode != 2
+    </update>
+
+
+    <!-- 根据条件模糊查询评估列表详情 -->
+    <select id="queryEstimateByWeChat" resultType="com.emp.estimateManage.entity.Estimate">
+        select ex.id,ex.estimateName,ex.estimateBeginTime,ex.estimateEndTime,ex.estimateDataCode,cu.id as cultivateId,cu.cultivateName,
+        cu.cultivateType,cu.beginTime,cu.endTime,ex.answerLimitNum,es.estimateCode
+        from tb_estimate_manage ex left join tb_cultivate_manage cu on ex.cultivateId = cu.id
+        left join tb_estimate_student es on es.estimateId = ex.id
+        where ex.status = 1 and cu.status = 1
+        <if test="estimate != null">
+            <if test="estimate.cultivateId != null and estimate.cultivateId != 0">
+                and ex.cultivateId = ${estimate.cultivateId}
+            </if>
+            <if test="studentId != null">
+                and es.studentId = ${studentId}
+            </if>
+        </if>
+        order by FIELD(ex.estimateDataCode,1,0,2),cu.beginTime asc
+    </select>
+
+
+    <!-- 问卷是否发布操作-->
+    <update id="updatePublishStatus" parameterType="com.emp.estimateManage.entity.QuestionnaireEstimate">
+        update tb_questionnaire_estimate set
+        isPublish = ${qi.isPublish},
+        updateTime = current_timestamp
+        where status = 1 and estimateId = ${qi.estimateId}
+    </update>
+
+
+    <!-- 删除评估实例(包括中间表和问卷表) -->
+    <delete id="deleteEstimates" parameterType="int[]">
+        <!--删除问卷-->
+        delete from tb_questionnaire_estimate where estimateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除评估的学员-->
+        delete from tb_estimate_student where estimateId in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+        <!--删除评估-->
+        delete from tb_estimate_manage where id in
+        <foreach collection="ids" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+        ;
+    </delete>
+
+</mapper>
