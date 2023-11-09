@@ -1,6 +1,5 @@
 package com.emp.systemManage.utils;
 
-import com.google.gson.Gson;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
